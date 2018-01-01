@@ -52,8 +52,8 @@ func scanContents(location string) ([]Info, uint64) {
         fields := strings.Fields(line)
         // account for spaces before and after file/folder name
         // kinda ugly, and not that efficient, but works
-        name := strings.Replace(strings.Split(line, (fields[7] + " "))[1], " ", "\\ ", -1)
-        fmt.Printf("NAME: %s\n", name)
+        // so apparently you need the space to be ascii code... rip 90 minutes
+        name := strings.Replace(strings.Split(line, (fields[7] + " "))[1], " ", "\x20", -1)
 
         directory := (fields[0][0] == 'd')
 
@@ -81,6 +81,7 @@ func scanContents(location string) ([]Info, uint64) {
     }
 
     pprint(contents)
+    fmt.Printf("Size of %s: %d\n==========================\n", location, total_size)
 
     return contents, total_size
 }
@@ -91,22 +92,10 @@ func main() {
         log.Fatal(err)
     }
 
-    // _, size := scanContents(dir)
-    // fmt.Printf("Size of that Directory: %d\n", size)
-
-    // so apparently you need the space to be ascii code... rip 90 minutes
-    cmd := exec.Command("command", "ls", "-l", "\x20\x20\x20\x20test\x20\x20\x20\x20folder\x20\x20\x20\x20")
-    fmt.Printf("%#v \n", cmd.Args)
-
-    out, err := cmd.Output()
-    if err != nil {
-        fmt.Printf("%s\n", cmd.Stderr)
-        log.Fatal(err)
-    }
-    fmt.Printf("%s\n%s\n", dir, out)
+    scanContents(dir)
 
     // what happens if you dont have access?
-    // json?
+    // json? - structs first
 }
 
 
