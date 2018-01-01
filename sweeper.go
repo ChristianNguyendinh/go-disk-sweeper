@@ -14,26 +14,69 @@ import (
 // env GOOS=linux GOARCH=amd64 go build -o dist/sweeper-linux-amd64  sweeper.go
 // env GOOS=windows GOARCH=amd64 go build -o dist/sweeper-windows-amd64  sweeper.go
 
+// Struct holding file/directory info
 type Info struct {
     directory   bool
     owner       string
     group       string
     size        uint64
     name        string
+    children    []Info
 }
 
-func pprint(contents []Info) {
-    fmt.Printf("[\n")
-    for _, c := range contents {
-        fmt.Printf("\t%#v\n", c)
+// Print given number of tabs before given printf format string and argument
+// Pretty hacky... not very robust - only takes 1 arg...
+// but pretty printing will prolly go away in the future anyway
+func tab_print(format string, tabs int, arg interface{}) {
+    for i := 0; i < tabs; i++ {
+        fmt.Printf("\t")
     }
-    fmt.Printf("]\n\n")
+
+    if (arg == nil) {
+        fmt.Printf(format)
+    } else {
+        fmt.Printf(format, arg)
+    }
 }
 
-func scanContents(location string) ([]Info, uint64) {
+// Pretty print, with tabs and newlines, the contents of an Info struct, recursing on children
+// its actually not that pretty - esp for deep recurses
+func pprint_children(contents []Info, tabs int) {
+    tab_print("[\n", tabs, nil)
+    for _, c := range contents {
+        tab_print("\t{\n", tabs, nil)
+        tab_print("\tdirectory : %t,\n", tabs, c.directory)
+        tab_print("\towner : %s,\n", tabs, c.owner)
+        tab_print("\tgroup : %s,\n", tabs, c.group)
+        tab_print("\tsize : %d,\n", tabs, c.size)
+        tab_print("\tname : %s,\n", tabs, c.name)
+        if len(c.children) == 0 {
+            tab_print("\tchildren : []\n", tabs, nil)
+        } else {
+            tab_print("\tchildren : \n", tabs, nil)
+            pprint_children(c.children, tabs + 1)
+        }
+        tab_print("\t},\n", tabs, nil)
+    }
+    tab_print("]\n", tabs, nil)
+}
+
+// account for spaces before and after file/folder name
+// kinda ugly, and not that efficient, but works
+func format_name(location string, prev string) (name string) {
+    // so apparently you need the space to be ascii code... rip 90 minutes
+    // get everything after prev, in that result, replace all spaces w/ ascii code
+    name = strings.Replace(strings.Split(location, (prev + " "))[1], " ", "\x20", -1)
+    return name
+}
+
+// Helper that execs ls -l to generate an Info struct of everything inside the given directory
+// for files it just saves the info
+// for directories it recurses to get the sum size of all items inside that directory
+func scan_dir_contents(location string) ([]Info, uint64) {
     var total_size uint64 = 0
 
-    fmt.Printf("Scanning %s ...\n", location)
+    //fmt.Printf("Scanning %s ...\n", location)
 
     // command to get rid of any alias to ensure format
     cmd := exec.Command("command", "ls", "-l", location)
@@ -48,23 +91,23 @@ func scanContents(location string) ([]Info, uint64) {
     var contents []Info
 
     for _, line := range take {
-
         fields := strings.Fields(line)
-        // account for spaces before and after file/folder name
-        // kinda ugly, and not that efficient, but works
-        // so apparently you need the space to be ascii code... rip 90 minutes
-        name := strings.Replace(strings.Split(line, (fields[7] + " "))[1], " ", "\x20", -1)
+
+        // index 7 is right before the file name
+        name := format_name(line, fields[7])
 
         directory := (fields[0][0] == 'd')
 
         var size uint64
+        var children []Info
         if directory {
-            _, size = scanContents(location + "/" + name)
+            children, size = scan_dir_contents(location + "/" + name)
         } else {
             size, err = strconv.ParseUint(fields[4], 10, 64)
             if err != nil {
                 log.Fatal(err)
             }
+            children = nil // explicit
         }
         // add to total size for current directory
         total_size += size
@@ -75,15 +118,32 @@ func scanContents(location string) ([]Info, uint64) {
                         group     : fields[3],
                         size      : size,
                         name      : name,
+                        children  : children,
                     }
 
         contents = append(contents, info)
     }
 
-    pprint(contents)
-    fmt.Printf("Size of %s: %d\n==========================\n", location, total_size)
+    // pprint_children(contents)
+    // fmt.Printf("Size of %s: %d\n==========================\n", location, total_size)
 
     return contents, total_size
+}
+
+// Scan a directory - takes path to directory to scan
+// Produces an Info struct with calculated size and directory attributes
+func scan_dir(location string) Info {
+    // replace spaces with ascii code - to make it work with exec
+    name := strings.Replace(location, " ", "\x20", -1)
+    children, size := scan_dir_contents(name)
+    return Info{   
+                    directory : true,
+                    owner     : "?",
+                    group     : "?",
+                    size      : size,
+                    name      : name,
+                    children  : children,
+                }
 }
 
 func main() {
@@ -92,10 +152,13 @@ func main() {
         log.Fatal(err)
     }
 
-    scanContents(dir)
+    // pretty print list of size 1 consisting of returned Info struct
+    pprint_children([]Info{scan_dir(dir)}, 0)
 
+    // json?
+    // visualize somehow
     // what happens if you dont have access?
-    // json? - structs first
+    // currently ignoring hidden files
 }
 
 
