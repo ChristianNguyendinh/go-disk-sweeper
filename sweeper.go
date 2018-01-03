@@ -24,6 +24,7 @@ type Info struct {
     size        uint64
     name        string
     children    []Info
+    parent      *Info
 }
 
 // Print given number of tabs before given printf format string and argument
@@ -52,6 +53,13 @@ func pprint_children(contents []Info, tabs int) {
         tab_print("\tgroup : %s,\n", tabs, c.group)
         tab_print("\tsize : %d,\n", tabs, c.size)
         tab_print("\tname : %s,\n", tabs, c.name)
+
+        if c.parent == nil {
+            tab_print("\tparent (deref'ed) : %s,\n", tabs, "None")            
+        } else {
+            tab_print("\tparent (deref'ed) : %s,\n", tabs, (*c.parent).name)
+        }
+
         if len(c.children) == 0 {
             tab_print("\tchildren : []\n", tabs, nil)
         } else {
@@ -106,6 +114,7 @@ func scan_dir_contents(location string) ([]Info, uint64) {
                 size      : 0,
                 name      : "ERROR - NO ACCESS TO PARENT",
                 children  : []Info{},
+                parent    : nil,
             },
         }, 0
     }
@@ -143,6 +152,13 @@ func scan_dir_contents(location string) ([]Info, uint64) {
             size      : size,
             name      : name,
             children  : children,
+            parent    : nil,
+        }
+
+        // set parent for children - not sure if this is the best way
+        // use index cause range copies the values, when we need to modify
+        for i, _ := range info.children {
+            info.children[i].parent = &info
         }
 
         contents = append(contents, info)
@@ -151,6 +167,7 @@ func scan_dir_contents(location string) ([]Info, uint64) {
     // pprint_children(contents)
     // fmt.Printf("Size of %s: %d\n==========================\n", location, total_size)
 
+    // fmt.Printf("CONTENTS:%#v\n\n", contents)
     return contents, total_size
 }
 
@@ -160,14 +177,22 @@ func scan_dir(location string) Info {
     // replace spaces with ascii code - to make it work with exec
     name := strings.Replace(location, " ", "\x20", -1)
     children, size := scan_dir_contents(name)
-    return Info{   
+    
+    info := Info{   
         directory : true,
         owner     : "n/a",
         group     : "n/a",
         size      : size,
         name      : name,
         children  : children,
+        parent    : nil,
     }
+
+    for i, _ := range info.children {
+        info.children[i].parent = &info
+    }
+
+    return info
 }
 
 func main() {
@@ -179,7 +204,7 @@ func main() {
     }
 
     // pretty print list of size 1 consisting of returned Info struct
-    // pprint_children([]Info{scan_dir(dir)}, 0)
+    //pprint_children([]Info{scan_dir(dir)}, 0)
 
     info := scan_dir(dir)
     report_errors(bad_dirs)

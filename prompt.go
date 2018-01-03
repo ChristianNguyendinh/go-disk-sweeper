@@ -6,6 +6,7 @@ import (
     "log"
     "strings"
     "fmt"
+    "strconv"
 )
 
 func show_current_info(info Info) {
@@ -17,8 +18,7 @@ func show_current_info(info Info) {
 }
 
 func start_prompt(info Info) {
-    // var curr Info = info
-    // var prev Info = info
+    var curr Info = info
 
     fmt.Printf("Command Prompt:\n")
 
@@ -38,13 +38,25 @@ func start_prompt(info Info) {
             break
         }
 
-        // fds = strings.Fields(line)
+        fds := strings.Fields(line)
 
-        // switch fds[0] {
-        // case "":
-        // }
-
-        fmt.Printf("Command Ran: %s\n", line)
+        if len(fds) > 0 {
+            if num, err := strconv.ParseInt(fds[0], 10, 64); err == nil {
+                if num >= int64(len(curr.children)) {
+                    fmt.Printf("Invalid Number.\n")
+                } else {
+                    fmt.Printf("Want to go into: %s\n", curr.children[num].name)
+                    curr = curr.children[num]
+                    show_current_info(curr)
+                }
+            } else if fds[0] == "b" || fds[0] == "back" {
+                fmt.Printf("Going back...\n")
+                curr = *curr.parent
+                show_current_info(curr)
+            } else {
+                fmt.Printf("Invalid: %s\n", line)
+            }   
+        }
     }
 
     fmt.Printf("DONE!\n")
