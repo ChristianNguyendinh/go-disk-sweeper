@@ -162,8 +162,8 @@ func scan_dir(location string) Info {
     children, size := scan_dir_contents(name)
     return Info{   
         directory : true,
-        owner     : "?",
-        group     : "?",
+        owner     : "n/a",
+        group     : "n/a",
         size      : size,
         name      : name,
         children  : children,
@@ -179,9 +179,12 @@ func main() {
     }
 
     // pretty print list of size 1 consisting of returned Info struct
-    pprint_children([]Info{scan_dir(dir)}, 0)
+    // pprint_children([]Info{scan_dir(dir)}, 0)
 
+    info := scan_dir(dir)
     report_errors(bad_dirs)
+
+    start_prompt(info)
 
     // json?
     // visualize somehow
