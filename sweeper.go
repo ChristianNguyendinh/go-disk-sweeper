@@ -27,6 +27,22 @@ type Info struct {
     parent      *Info
 }
 
+// Implement sort interface [Len(), Less(i, j), Swap(i, j)] for list of Info's
+type bySize []Info
+
+func (i bySize) Len() int {
+    return len(i)
+}
+
+func (i bySize) Less(a, b int) bool {
+    // largest is first
+    return i[a].size > i[b].size
+}
+
+func (i bySize) Swap(a, b int) {
+    i[a], i[b] = i[b], i[a]
+}
+
 // Print given number of tabs before given printf format string and argument
 // Pretty hacky... not very robust - only takes 1 arg...
 // but pretty printing will prolly go away in the future anyway

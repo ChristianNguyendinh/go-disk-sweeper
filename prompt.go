@@ -7,22 +7,44 @@ import (
     "strings"
     "fmt"
     "strconv"
+    "sort"
 )
 
-func show_current_info(info Info) {
-    fmt.Printf("Currently Viewing: %s\n", info.name)
-    for i, v := range info.children {
+// returns sub directories currently being shown
+func show_current_info(info Info) []Info {
+    fmt.Printf("\n\nCurrently Viewing: %s\n", info.name)
+
+    sort.Sort(bySize(info.children))
+
+    dirs := []Info{}
+    files := []Info{}
+    // separate files and dirs, keeping sorted order
+    for _, v := range info.children {
+        if v.directory {
+            dirs = append(dirs, v)
+        } else {
+            files = append(files, v)
+        }
+    }
+
+    fmt.Printf("\n======================\nFiles: \n")
+    for _, v := range files {
+        fmt.Printf("\n\t%s\n\tSize: %d\n", v.name, v.size)
+    }
+
+    fmt.Printf("\n======================\nDirectories: \n")
+    for i, v := range dirs {
         fmt.Printf("\n%d.\t%s\n\tSize: %d\n", i, v.name, v.size)
     }
+
     fmt.Printf("\n\nPress number to go into corresponding directory\nOr back to go backwards:\n")
+
+    return dirs
 }
 
 func start_prompt(info Info) {
-    var curr Info = info
-
-    fmt.Printf("Command Prompt:\n")
-
-    show_current_info(info)
+    curr := info
+    curr_sub_dirs := show_current_info(info)
 
     for {
         bio := bufio.NewReader(os.Stdin)
@@ -42,20 +64,21 @@ func start_prompt(info Info) {
 
         if len(fds) > 0 {
             if num, err := strconv.ParseInt(fds[0], 10, 64); err == nil {
-                if num >= int64(len(curr.children)) {
+                if num >= int64(len(curr_sub_dirs)) {
                     fmt.Printf("Invalid Number.\n")
                 } else {
-                    fmt.Printf("Want to go into: %s\n", curr.children[num].name)
-                    curr = curr.children[num]
-                    show_current_info(curr)
+                    fmt.Printf("Want to go into: %s\n", curr_sub_dirs[num].name)
+                    curr = curr_sub_dirs[num]
+                    curr_sub_dirs = show_current_info(curr)
                 }
             } else if fds[0] == "b" || fds[0] == "back" {
                 fmt.Printf("Going back...\n")
                 curr = *curr.parent
-                show_current_info(curr)
+                curr_sub_dirs = show_current_info(curr)
             } else {
                 fmt.Printf("Invalid: %s\n", line)
-            }   
+            }
+            // help???
         }
     }
 
