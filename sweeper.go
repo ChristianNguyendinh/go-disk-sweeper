@@ -14,6 +14,8 @@ import (
 // env GOOS=linux GOARCH=amd64 go build -o dist/sweeper-linux-amd64  sweeper.go
 // env GOOS=windows GOARCH=amd64 go build -o dist/sweeper-windows-amd64  sweeper.go
 
+var bad_dirs []string
+
 // Struct holding file/directory info
 type Info struct {
     directory   bool
@@ -70,6 +72,17 @@ func format_name(location string, prev string) (name string) {
     return name
 }
 
+func report_errors(bds []string) {
+    if len(bds) > 0 {
+        fmt.Printf("=== WARNING ===\nCould not access following directories:\n")
+        fmt.Printf("[\n")
+        for _, dir := range bds {
+            fmt.Printf("\t%s,", dir)
+        }
+        fmt.Printf("\n]\n")
+    }
+}
+
 // Helper that execs ls -l to generate an Info struct of everything inside the given directory
 // for files it just saves the info
 // for directories it recurses to get the sum size of all items inside that directory
@@ -81,9 +94,20 @@ func scan_dir_contents(location string) ([]Info, uint64) {
     // command to get rid of any alias to ensure format
     cmd := exec.Command("command", "ls", "-l", location)
     out, err := cmd.Output()
+    // gracefully continue - return errored info struct list
     if err != nil {
-        fmt.Printf("%s\n", cmd.Stderr)
-        log.Fatal(err)
+        bad_dirs = append(bad_dirs, location)
+
+        return []Info{
+            Info{
+                directory : true,
+                owner     : "ERR",
+                group     : "ERR",
+                size      : 0,
+                name      : "ERROR - NO ACCESS TO PARENT",
+                children  : []Info{},
+            },
+        }, 0
     }
 
     spl := strings.Split(string(out), "\n")
@@ -113,13 +137,13 @@ func scan_dir_contents(location string) ([]Info, uint64) {
         total_size += size
 
         info := Info{   
-                        directory : directory,
-                        owner     : fields[2],
-                        group     : fields[3],
-                        size      : size,
-                        name      : name,
-                        children  : children,
-                    }
+            directory : directory,
+            owner     : fields[2],
+            group     : fields[3],
+            size      : size,
+            name      : name,
+            children  : children,
+        }
 
         contents = append(contents, info)
     }
@@ -137,16 +161,18 @@ func scan_dir(location string) Info {
     name := strings.Replace(location, " ", "\x20", -1)
     children, size := scan_dir_contents(name)
     return Info{   
-                    directory : true,
-                    owner     : "?",
-                    group     : "?",
-                    size      : size,
-                    name      : name,
-                    children  : children,
-                }
+        directory : true,
+        owner     : "?",
+        group     : "?",
+        size      : size,
+        name      : name,
+        children  : children,
+    }
 }
 
 func main() {
+    // scans the directory the user is currently in
+    // NOT the directory the executable is in!
     dir, err := os.Getwd()
     if err != nil {
         log.Fatal(err)
@@ -155,9 +181,10 @@ func main() {
     // pretty print list of size 1 consisting of returned Info struct
     pprint_children([]Info{scan_dir(dir)}, 0)
 
+    report_errors(bad_dirs)
+
     // json?
     // visualize somehow
-    // what happens if you dont have access?
     // currently ignoring hidden files
 }
 
