@@ -41,6 +41,20 @@ func format_size(size uint64) string {
     }
 }
 
+func valid_format(format string) (int, bool) {
+    if format == "b" || format == "B" {
+        return show_BB, false
+    } else if format == "kb" || format == "KB" {
+        return show_KB, false
+    } else if format == "mb" || format == "MB" {
+        return show_MB, false
+    } else if format == "gb" || format == "GB" {
+        return show_GB, false
+    } else {
+        return 0, true
+    }
+}
+
 // returns sub directories currently being shown
 func show_current_info(info Info) []Info {
     fmt.Printf("\n\n______________________________________________________\n")
@@ -98,18 +112,27 @@ func start_prompt(info Info) {
         if len(fds) > 0 {
             if num, err := strconv.ParseInt(fds[0], 10, 64); err == nil {
                 if num >= int64(len(curr_sub_dirs)) {
-                    fmt.Printf("Invalid Number.\n")
+                    fmt.Printf("--- Invalid Number.\n")
                 } else {
-                    fmt.Printf("Want to go into: %s\n", curr_sub_dirs[num].name)
                     curr = curr_sub_dirs[num]
                     curr_sub_dirs = show_current_info(curr)
                 }
+
             } else if fds[0] == "b" || fds[0] == "back" {
-                fmt.Printf("Going back...\n")
                 curr = *curr.parent
                 curr_sub_dirs = show_current_info(curr)
+
+            } else if fds[0] == "size" && len(fds) == 2 {
+                if nf, err := valid_format(fds[1]); err {
+                    fmt.Printf("--- Invalid size format: %s\n", fds[1])
+                } else {
+                    options.size_display = nf
+                    show_current_info(curr)
+                    fmt.Printf("--- Now showing file sizes as %s\n", fds[1])
+                }
+
             } else {
-                fmt.Printf("Invalid: %s\n", line)
+                fmt.Printf("--- Invalid: %s\n", line)
             }
             // help???
         }
