@@ -14,34 +14,8 @@ import (
 // env GOOS=linux GOARCH=amd64 go build -o dist/sweeper-linux-amd64  sweeper.go
 // env GOOS=windows GOARCH=amd64 go build -o dist/sweeper-windows-amd64  sweeper.go
 
+// Holds directories that produce an error when accessing
 var bad_dirs []string
-
-// Struct holding file/directory info
-type Info struct {
-    directory   bool
-    owner       string
-    group       string
-    size        uint64
-    name        string
-    children    []Info
-    parent      *Info
-}
-
-// Implement sort interface [Len(), Less(i, j), Swap(i, j)] for list of Info's
-type bySize []Info
-
-func (i bySize) Len() int {
-    return len(i)
-}
-
-func (i bySize) Less(a, b int) bool {
-    // largest is first
-    return i[a].size > i[b].size
-}
-
-func (i bySize) Swap(a, b int) {
-    i[a], i[b] = i[b], i[a]
-}
 
 // Print given number of tabs before given printf format string and argument
 // Pretty hacky... not very robust - only takes 1 arg...
@@ -227,9 +201,10 @@ func main() {
 
     start_prompt(info)
 
-    // sortings options? - show all info?
-    // options for displaying different data sizes?
+    // show all info - default? - need for sorting and stuff
+    // help command
     // currently ignoring hidden files - add flags to optionally do?
+    // refactor - some stuff (var names) are bad
 }
 
 

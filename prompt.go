@@ -16,16 +16,23 @@ const (
     show_KB 
     show_MB
     show_GB
+
+    sort_size = iota
+    sort_name
+    sort_owner
+    sort_group
 )
 
 type Options struct {
-    size_display int
+    size_display    int
+    sorting         int
 }
 
 var options Options
 // Initialize default options
 func init() {
-    options.size_display = show_MB
+    options.size_display = show_BB
+    options.sorting = sort_size
 }
 
 func format_size(size uint64) string {
@@ -41,15 +48,29 @@ func format_size(size uint64) string {
     }
 }
 
-func valid_format(format string) (int, bool) {
-    if format == "b" || format == "B" {
+func valid_format(f string) (int, bool) {
+    if f == "b" || f == "B" {
         return show_BB, false
-    } else if format == "kb" || format == "KB" {
+    } else if f == "kb" || f == "KB" {
         return show_KB, false
-    } else if format == "mb" || format == "MB" {
+    } else if f == "mb" || f == "MB" {
         return show_MB, false
-    } else if format == "gb" || format == "GB" {
+    } else if f == "gb" || f == "GB" {
         return show_GB, false
+    } else {
+        return 0, true
+    }
+}
+
+func valid_sort(s string) (int, bool) {
+    if s == "size" {
+        return sort_size, false
+    } else if s == "name" {
+        return sort_name, false
+    } else if s == "owner" {
+        return sort_owner, false
+    } else if s == "group" {
+        return sort_group, false
     } else {
         return 0, true
     }
@@ -60,8 +81,17 @@ func show_current_info(info Info) []Info {
     fmt.Printf("\n\n______________________________________________________\n")
     fmt.Printf("Currently Viewing: %s\n", info.name)
 
-    // sort by size, largest first
-    sort.Sort(bySize(info.children))
+    // sort results
+    switch options.sorting {
+    case sort_size:
+        sort.Sort(bySize(info.children))
+    case sort_name:
+        sort.Sort(byName(info.children))
+    case sort_owner:
+        sort.Sort(byOwner(info.children))
+    case sort_group:
+        sort.Sort(byGroup(info.children))
+    }
 
     dirs := []Info{}
     files := []Info{}
@@ -112,7 +142,7 @@ func start_prompt(info Info) {
         if len(fds) > 0 {
             if num, err := strconv.ParseInt(fds[0], 10, 64); err == nil {
                 if num >= int64(len(curr_sub_dirs)) {
-                    fmt.Printf("--- Invalid Number.\n")
+                    fmt.Printf("!!! Invalid Number.\n")
                 } else {
                     curr = curr_sub_dirs[num]
                     curr_sub_dirs = show_current_info(curr)
@@ -124,15 +154,24 @@ func start_prompt(info Info) {
 
             } else if fds[0] == "size" && len(fds) == 2 {
                 if nf, err := valid_format(fds[1]); err {
-                    fmt.Printf("--- Invalid size format: %s\n", fds[1])
+                    fmt.Printf("!!! Invalid size format: %s\n", fds[1])
                 } else {
                     options.size_display = nf
                     show_current_info(curr)
                     fmt.Printf("--- Now showing file sizes as %s\n", fds[1])
                 }
 
+            } else if fds[0] == "sort" && len(fds) == 2 {
+                if sf, err := valid_sort(fds[1]); err {
+                    fmt.Printf("!!! Invalid sort format: %s\n", fds[1])
+                } else {
+                    options.sorting = sf
+                    show_current_info(curr)
+                    fmt.Printf("--- Now sorting by %s\n", fds[1])
+                }
+
             } else {
-                fmt.Printf("--- Invalid: %s\n", line)
+                fmt.Printf("!!! Invalid Command: %s\n", line)
             }
             // help???
         }
