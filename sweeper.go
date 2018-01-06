@@ -227,9 +227,9 @@ func main() {
 
     start_prompt(info)
 
-    // json?
-    // visualize somehow
-    // currently ignoring hidden files
+    // sortings options? - show all info?
+    // options for displaying different data sizes?
+    // currently ignoring hidden files - add flags to optionally do?
 }
 
 

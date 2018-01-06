@@ -10,10 +10,43 @@ import (
     "sort"
 )
 
+// multiple of byte sizes in binary (ex. 1 KB = 1024 B)
+const (
+    show_BB = 1 << (10 * iota)
+    show_KB 
+    show_MB
+    show_GB
+)
+
+type Options struct {
+    size_display int
+}
+
+var options Options
+// Initialize default options
+func init() {
+    options.size_display = show_MB
+}
+
+func format_size(size uint64) string {
+    switch options.size_display {
+    case show_KB:
+        return fmt.Sprintf("%.3fKB", float64(size) / show_KB)
+    case show_MB:
+        return fmt.Sprintf("%.3fMB", float64(size) / show_MB)
+    case show_GB:
+        return fmt.Sprintf("%.3fGB", float64(size) / show_GB)
+    default:
+        return fmt.Sprintf("%dB", size)
+    }
+}
+
 // returns sub directories currently being shown
 func show_current_info(info Info) []Info {
-    fmt.Printf("\n\nCurrently Viewing: %s\n", info.name)
+    fmt.Printf("\n\n______________________________________________________\n")
+    fmt.Printf("Currently Viewing: %s\n", info.name)
 
+    // sort by size, largest first
     sort.Sort(bySize(info.children))
 
     dirs := []Info{}
@@ -29,12 +62,12 @@ func show_current_info(info Info) []Info {
 
     fmt.Printf("\n======================\nFiles: \n")
     for _, v := range files {
-        fmt.Printf("\n\t%s\n\tSize: %d\n", v.name, v.size)
+        fmt.Printf("\n\t%s\n\tSize: %s\n", v.name, format_size(v.size))
     }
 
     fmt.Printf("\n======================\nDirectories: \n")
     for i, v := range dirs {
-        fmt.Printf("\n%d.\t%s\n\tSize: %d\n", i, v.name, v.size)
+        fmt.Printf("\n%d.\t%s\n\tSize: %s\n", i, v.name, format_size(v.size))
     }
 
     fmt.Printf("\n\nPress number to go into corresponding directory\nOr back to go backwards:\n")
