@@ -51,13 +51,13 @@ func format_size(size uint64) string {
 }
 
 func valid_format(f string) (int, bool) {
-    if f == "b" || f == "B" {
+    if f == "b" {
         return show_BB, false
-    } else if f == "kb" || f == "KB" {
+    } else if f == "kb" {
         return show_KB, false
-    } else if f == "mb" || f == "MB" {
+    } else if f == "mb" {
         return show_MB, false
-    } else if f == "gb" || f == "GB" {
+    } else if f == "gb" {
         return show_GB, false
     } else {
         return 0, true
@@ -139,7 +139,7 @@ func start_prompt(info Info) {
             log.Fatal(err)
         }
 
-        line := strings.TrimSpace(string(in))
+        line := strings.ToLower(strings.TrimSpace(string(in)))
 
         if line == "exit" {
             break
@@ -191,10 +191,20 @@ func start_prompt(info Info) {
                     fmt.Printf("!!! Invalid sort format: %s\n", fds[1])
                 }
 
+            } else if fds[0] == "help" {
+                fmt.Printf("\n--- List of Commands:\n")
+                fmt.Printf("\t<number> - Go into the corresponding directory\n\n")
+                fmt.Printf("\tb\n\tback - Go into the corresponding directory\n\n")
+                fmt.Printf("\tsize (b|kb|mb|gb) - change display size\n\n")
+                fmt.Printf("\tsort (size|name|owner|group) - change order which files/dirs are displayed\n\n")
+                fmt.Printf("\tverbose (on|off) - for each file/dir, on shows owner and group, off does not\n\n")
+                fmt.Printf("\thelp - show command information\n\n")
+                fmt.Printf("\texit - exit the program\n\n")
+
+
             } else {
                 fmt.Printf("!!! Invalid Command: %s\n", line)
             }
-            // help???
         }
     }
 
