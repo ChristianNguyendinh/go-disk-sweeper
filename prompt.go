@@ -10,8 +10,8 @@ import (
     "sort"
 )
 
-// multiple of byte sizes in binary (ex. 1 KB = 1024 B)
 const (
+    // multiple of byte sizes in binary (ex. 1 KB = 1024 B)
     show_BB = 1 << (10 * iota)
     show_KB 
     show_MB
@@ -26,6 +26,7 @@ const (
 type Options struct {
     size_display    int
     sorting         int
+    verbose         bool
 }
 
 var options Options
@@ -33,6 +34,7 @@ var options Options
 func init() {
     options.size_display = show_BB
     options.sorting = sort_size
+    options.verbose = true
 }
 
 func format_size(size uint64) string {
@@ -106,12 +108,18 @@ func show_current_info(info Info) []Info {
 
     fmt.Printf("\n======================\nFiles: \n")
     for _, v := range files {
-        fmt.Printf("\n\t%s\n\tSize: %s\n", v.name, format_size(v.size))
+        fmt.Printf("\n-\t%s\n\tSize: %s\n", v.name, format_size(v.size))
+        if options.verbose {
+            fmt.Printf("\tOwner: %s\n\tGroup: %s\n", v.owner, v.group)
+        }
     }
 
     fmt.Printf("\n======================\nDirectories: \n")
     for i, v := range dirs {
         fmt.Printf("\n%d.\t%s\n\tSize: %s\n", i, v.name, format_size(v.size))
+        if options.verbose {
+            fmt.Printf("\tOwner: %s\n\tGroup: %s\n", v.owner, v.group)
+        }
     }
 
     fmt.Printf("\n\nPress number to go into corresponding directory\nOr back to go backwards:\n")
@@ -168,6 +176,19 @@ func start_prompt(info Info) {
                     options.sorting = sf
                     show_current_info(curr)
                     fmt.Printf("--- Now sorting by %s\n", fds[1])
+                }
+
+            } else if fds[0] == "verbose" && len(fds) == 2 {
+                if fds[1] == "on" {
+                    options.verbose = true
+                    show_current_info(curr)
+                    fmt.Printf("--- Showing all info\n")
+                } else if fds[1] == "off"{
+                    options.verbose = false
+                    show_current_info(curr)
+                    fmt.Printf("--- Only showing name and size\n")
+                } else {
+                    fmt.Printf("!!! Invalid sort format: %s\n", fds[1])
                 }
 
             } else {
