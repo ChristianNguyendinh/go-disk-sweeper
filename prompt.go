@@ -50,31 +50,63 @@ func format_size(size uint64) string {
     }
 }
 
-func valid_format(f string) (int, bool) {
-    if f == "b" {
+func valid_size(f string) (int, bool) {
+    switch f {
+    case "b":
         return show_BB, false
-    } else if f == "kb" {
+    case "kb":
         return show_KB, false
-    } else if f == "mb" {
+    case "mb":
         return show_MB, false
-    } else if f == "gb" {
+    case "gb":
         return show_GB, false
-    } else {
+    default:
         return 0, true
     }
 }
 
+func show_size(f int) string {
+    switch f {
+    case show_BB:
+        return "Bytes (b)"
+    case show_KB:
+        return "Kilobytes (kb)"
+    case show_MB:
+        return "Megabytes (mb)"
+    case show_GB:
+        return "Gigabytes (gb)"
+    default:
+        return "invalid"
+    }
+}
+
 func valid_sort(s string) (int, bool) {
-    if s == "size" {
+    switch s {
+    case "size":
         return sort_size, false
-    } else if s == "name" {
+    case "name":
         return sort_name, false
-    } else if s == "owner" {
+    case "owner":
         return sort_owner, false
-    } else if s == "group" {
+    case "group":
         return sort_group, false
-    } else {
+    default:
         return 0, true
+    }
+}
+
+func show_sort(s int) string {
+    switch s {
+    case sort_size:
+        return "size (largest on top)"
+    case sort_name:
+        return "name"
+    case sort_owner:
+        return "owner"
+    case sort_group:
+        return "group"
+    default:
+        return "invalid"
     }
 }
 
@@ -160,35 +192,51 @@ func start_prompt(info Info) {
                 curr = *curr.parent
                 curr_sub_dirs = show_current_info(curr)
 
-            } else if fds[0] == "size" && len(fds) == 2 {
-                if nf, err := valid_format(fds[1]); err {
-                    fmt.Printf("!!! Invalid size format: %s\n", fds[1])
+            } else if fds[0] == "size" && len(fds) <= 2 {
+                if len(fds) == 1 {
+                    fmt.Printf("Currently showing file sizes in: %s\n", show_size(options.size_display))
                 } else {
-                    options.size_display = nf
-                    show_current_info(curr)
-                    fmt.Printf("--- Now showing file sizes as %s\n", fds[1])
+                    if nf, err := valid_size(fds[1]); err {
+                        fmt.Printf("!!! Invalid size format: %s\n", fds[1])
+                    } else {
+                        options.size_display = nf
+                        show_current_info(curr)
+                        fmt.Printf("--- Now showing file sizes as %s\n", fds[1])
+                    }
                 }
 
-            } else if fds[0] == "sort" && len(fds) == 2 {
-                if sf, err := valid_sort(fds[1]); err {
-                    fmt.Printf("!!! Invalid sort format: %s\n", fds[1])
+            } else if fds[0] == "sort" && len(fds) <= 2 {
+                if len(fds) == 1 {
+                    fmt.Printf("Currently sorting by: %s\n", show_sort(options.sorting))
                 } else {
-                    options.sorting = sf
-                    show_current_info(curr)
-                    fmt.Printf("--- Now sorting by %s\n", fds[1])
+                    if sf, err := valid_sort(fds[1]); err {
+                        fmt.Printf("!!! Invalid sort format: %s\n", fds[1])
+                    } else {
+                        options.sorting = sf
+                        show_current_info(curr)
+                        fmt.Printf("--- Now sorting by %s\n", fds[1])
+                    }
                 }
 
-            } else if fds[0] == "verbose" && len(fds) == 2 {
-                if fds[1] == "on" {
-                    options.verbose = true
-                    show_current_info(curr)
-                    fmt.Printf("--- Showing all info\n")
-                } else if fds[1] == "off"{
-                    options.verbose = false
-                    show_current_info(curr)
-                    fmt.Printf("--- Only showing name and size\n")
+            } else if fds[0] == "verbose" && len(fds) <= 2 {
+                if len(fds) == 1 {
+                    if options.verbose {
+                        fmt.Printf("verbose currently on\n")
+                    } else {
+                        fmt.Printf("verbose currently off\n")
+                    }
                 } else {
-                    fmt.Printf("!!! Invalid sort format: %s\n", fds[1])
+                    if fds[1] == "on" {
+                        options.verbose = true
+                        show_current_info(curr)
+                        fmt.Printf("--- Showing all info\n")
+                    } else if fds[1] == "off"{
+                        options.verbose = false
+                        show_current_info(curr)
+                        fmt.Printf("--- Only showing name and size\n")
+                    } else {
+                        fmt.Printf("!!! Invalid sort format: %s\n", fds[1])
+                    }
                 }
 
             } else if fds[0] == "help" {
@@ -196,8 +244,11 @@ func start_prompt(info Info) {
                 fmt.Printf("\t<number> - Go into the corresponding directory\n\n")
                 fmt.Printf("\tb\n\tback - Go into the corresponding directory\n\n")
                 fmt.Printf("\tsize (b|kb|mb|gb) - change display size\n\n")
+                fmt.Printf("\tsize - show current display size\n\n")
                 fmt.Printf("\tsort (size|name|owner|group) - change order which files/dirs are displayed\n\n")
+                fmt.Printf("\tsort - show current sorting display method\n\n")
                 fmt.Printf("\tverbose (on|off) - for each file/dir, on shows owner and group, off does not\n\n")
+                fmt.Printf("\tverbose - show whether verbose is currently on or not\n\n")
                 fmt.Printf("\thelp - show command information\n\n")
                 fmt.Printf("\texit - exit the program\n\n")
 
@@ -208,7 +259,7 @@ func start_prompt(info Info) {
         }
     }
 
-    fmt.Printf("DONE!\n")
+    fmt.Printf("\nexiting...\n\n")
 }
 
 

@@ -201,8 +201,7 @@ func main() {
 
     start_prompt(info)
 
-    // help command
-    // status for commands - ex. verbose => verbose currently on
+
     // dont refresh if already done?
     // currently ignoring hidden files - add flags to optionally do?
     // refactor - some stuff (var names) are bad
