@@ -203,8 +203,12 @@ func main() {
 
 
     // dont refresh if already done?
+    // jump directly back to start - instead of pressing 'b' a million times
+    // going back at home
     // currently ignoring hidden files - add flags to optionally do?
+    // support for windows
     // refactor - some stuff (var names) are bad
+    // later - generate html?, concurrency?
 }
 
 

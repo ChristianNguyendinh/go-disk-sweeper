@@ -160,6 +160,7 @@ func show_current_info(info Info) []Info {
 }
 
 func start_prompt(info Info) {
+    home := info
     curr := info
     curr_sub_dirs := show_current_info(info)
 
@@ -200,7 +201,7 @@ func start_prompt(info Info) {
                         fmt.Printf("!!! Invalid size format: %s\n", fds[1])
                     } else {
                         options.size_display = nf
-                        show_current_info(curr)
+                        curr_sub_dirs = show_current_info(curr)
                         fmt.Printf("--- Now showing file sizes as %s\n", fds[1])
                     }
                 }
@@ -213,7 +214,7 @@ func start_prompt(info Info) {
                         fmt.Printf("!!! Invalid sort format: %s\n", fds[1])
                     } else {
                         options.sorting = sf
-                        show_current_info(curr)
+                        curr_sub_dirs = show_current_info(curr)
                         fmt.Printf("--- Now sorting by %s\n", fds[1])
                     }
                 }
@@ -228,16 +229,20 @@ func start_prompt(info Info) {
                 } else {
                     if fds[1] == "on" {
                         options.verbose = true
-                        show_current_info(curr)
+                        curr_sub_dirs = show_current_info(curr)
                         fmt.Printf("--- Showing all info\n")
                     } else if fds[1] == "off"{
                         options.verbose = false
-                        show_current_info(curr)
+                        curr_sub_dirs = show_current_info(curr)
                         fmt.Printf("--- Only showing name and size\n")
                     } else {
                         fmt.Printf("!!! Invalid sort format: %s\n", fds[1])
                     }
                 }
+
+            } else if len(fds) == 1 && (fds[0] == "home" || fds[0] == "~") {
+                curr = home
+                curr_sub_dirs = show_current_info(curr)
 
             } else if fds[0] == "help" {
                 fmt.Printf("\n--- List of Commands:\n")
