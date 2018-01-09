@@ -7,6 +7,7 @@ import (
     "fmt"
     "log"
     "strconv"
+    "flag"
 )
 
 // env GOOS=darwin GOARCH=amd64 go build -o dist/sweeper-darwin-amd64  sweeper.go
@@ -16,6 +17,9 @@ import (
 
 // Holds directories that produce an error when accessing
 var bad_dirs []string
+
+// flags for the ls/dir command
+var flags string
 
 // Print given number of tabs before given printf format string and argument
 // Pretty hacky... not very robust - only takes 1 arg...
@@ -90,7 +94,7 @@ func scan_dir_contents(location string) ([]Info, uint64) {
     //fmt.Printf("Scanning %s ...\n", location)
 
     // command to get rid of any alias to ensure format
-    cmd := exec.Command("command", "ls", "-l", location)
+    cmd := exec.Command("command", "ls", flags, location)
     out, err := cmd.Output()
     // gracefully continue - return errored info struct list
     if err != nil {
@@ -123,7 +127,9 @@ func scan_dir_contents(location string) ([]Info, uint64) {
 
         var size uint64
         var children []Info
-        if directory {
+        if name == "." || name == ".." {
+            continue
+        } else if directory {
             children, size = scan_dir_contents(location + "/" + name)
         } else {
             size, err = strconv.ParseUint(fields[4], 10, 64)
@@ -186,6 +192,16 @@ func scan_dir(location string) Info {
 }
 
 func main() {
+    // parse flags
+    h := flag.Bool("hidden", false, "scan for hidden files")
+    flag.Parse()
+
+    if *h {
+        flags = "-la"
+    } else {
+        flags = "-l"
+    }
+
     // scans the directory the user is currently in
     // NOT the directory the executable is in!
     dir, err := os.Getwd()
@@ -199,13 +215,13 @@ func main() {
     info := scan_dir(dir)
     report_errors(bad_dirs)
 
+    // pprint_children([]Info{info}, 0)
+
     start_prompt(info)
 
 
-    // dont refresh if already done?
-    // jump directly back to start - instead of pressing 'b' a million times
-    // going back at home
-    // currently ignoring hidden files - add flags to optionally do?
+    // going back twice doesnt work
+    // empty directory doesnt work
     // support for windows
     // refactor - some stuff (var names) are bad
     // later - generate html?, concurrency?

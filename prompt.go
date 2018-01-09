@@ -185,13 +185,19 @@ func start_prompt(info Info) {
                 if num >= int64(len(curr_sub_dirs)) {
                     fmt.Printf("!!! Invalid Number.\n")
                 } else {
+                    fmt.Printf("%#v\n========\n", curr)
                     curr = curr_sub_dirs[num]
                     curr_sub_dirs = show_current_info(curr)
+                    fmt.Printf("%#v\n", *curr.parent)
                 }
 
             } else if fds[0] == "b" || fds[0] == "back" {
-                curr = *curr.parent
-                curr_sub_dirs = show_current_info(curr)
+                if curr.parent != nil {
+                    curr = *curr.parent
+                    curr_sub_dirs = show_current_info(curr)
+                } else {
+                    fmt.Printf("Cannot go back any more.\n")
+                }
 
             } else if fds[0] == "size" && len(fds) <= 2 {
                 if len(fds) == 1 {
