@@ -7,13 +7,13 @@ type Info struct {
     group       string
     size        uint64
     name        string
-    children    []Info
+    children    []*Info
     parent      *Info
 }
 
 // Implement sort interface [Len(), Less(i, j), Swap(i, j)] for list of Info's
 // sort by size
-type bySize []Info
+type bySize []*Info
 
 func (i bySize) Len() int {
     return len(i)
@@ -29,7 +29,7 @@ func (i bySize) Swap(a, b int) {
 }
 
 // sort by size
-type byName []Info
+type byName []*Info
 
 func (i byName) Len() int {
     return len(i)
@@ -45,7 +45,7 @@ func (i byName) Swap(a, b int) {
 }
 
 // sort by owner
-type byOwner []Info
+type byOwner []*Info
 
 func (i byOwner) Len() int {
     return len(i)
@@ -61,7 +61,7 @@ func (i byOwner) Swap(a, b int) {
 }
 
 // sort by size
-type byGroup []Info
+type byGroup []*Info
 
 func (i byGroup) Len() int {
     return len(i)

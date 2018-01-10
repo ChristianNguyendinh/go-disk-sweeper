@@ -38,7 +38,7 @@ func tab_print(format string, tabs int, arg interface{}) {
 
 // Pretty print, with tabs and newlines, the contents of an Info struct, recursing on children
 // its actually not that pretty - esp for deep recurses
-func pprint_children(contents []Info, tabs int) {
+func pprint_children(contents []*Info, tabs int) {
     tab_print("[\n", tabs, nil)
     for _, c := range contents {
         tab_print("\t{\n", tabs, nil)
@@ -88,7 +88,7 @@ func report_errors(bds []string) {
 // Helper that execs ls -l to generate an Info struct of everything inside the given directory
 // for files it just saves the info
 // for directories it recurses to get the sum size of all items inside that directory
-func scan_dir_contents(location string) ([]Info, uint64) {
+func scan_dir_contents(location string) ([]*Info, uint64) {
     var total_size uint64 = 0
 
     //fmt.Printf("Scanning %s ...\n", location)
@@ -100,14 +100,14 @@ func scan_dir_contents(location string) ([]Info, uint64) {
     if err != nil {
         bad_dirs = append(bad_dirs, location)
 
-        return []Info{
-            Info{
+        return []*Info{
+            &Info{
                 directory : true,
                 owner     : "ERR",
                 group     : "ERR",
                 size      : 0,
                 name      : "ERROR - NO ACCESS TO PARENT",
-                children  : []Info{},
+                children  : []*Info{},
                 parent    : nil,
             },
         }, 0
@@ -115,7 +115,7 @@ func scan_dir_contents(location string) ([]Info, uint64) {
 
     spl := strings.Split(string(out), "\n")
     take := spl[1 : (len(spl) - 1)]
-    var contents []Info
+    var contents []*Info
 
     for _, line := range take {
         fields := strings.Fields(line)
@@ -126,7 +126,7 @@ func scan_dir_contents(location string) ([]Info, uint64) {
         directory := (fields[0][0] == 'd')
 
         var size uint64
-        var children []Info
+        var children []*Info
         if name == "." || name == ".." {
             continue
         } else if directory {
@@ -157,7 +157,7 @@ func scan_dir_contents(location string) ([]Info, uint64) {
             info.children[i].parent = &info
         }
 
-        contents = append(contents, info)
+        contents = append(contents, &info)
     }
 
     // pprint_children(contents)
@@ -217,10 +217,10 @@ func main() {
 
     // pprint_children([]Info{info}, 0)
 
-    start_prompt(info)
+    start_prompt(&info)
 
 
-    // going back twice doesnt work
+    // going back twice doesnt work - show_current_info is fking us
     // empty directory doesnt work
     // support for windows
     // refactor - some stuff (var names) are bad

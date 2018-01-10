@@ -111,7 +111,7 @@ func show_sort(s int) string {
 }
 
 // returns sub directories currently being shown
-func show_current_info(info Info) []Info {
+func show_current_info(info *Info) []*Info {
     fmt.Printf("\n\n______________________________________________________\n")
     fmt.Printf("Currently Viewing: %s\n", info.name)
 
@@ -127,8 +127,8 @@ func show_current_info(info Info) []Info {
         sort.Sort(byGroup(info.children))
     }
 
-    dirs := []Info{}
-    files := []Info{}
+    dirs := []*Info{}
+    files := []*Info{}
     // separate files and dirs, keeping sorted order
     for _, v := range info.children {
         if v.directory {
@@ -159,10 +159,10 @@ func show_current_info(info Info) []Info {
     return dirs
 }
 
-func start_prompt(info Info) {
+func start_prompt(info *Info) {
     home := info
     curr := info
-    curr_sub_dirs := show_current_info(info)
+    curr_sub_dirs := show_current_info(curr)
 
     for {
         bio := bufio.NewReader(os.Stdin)
@@ -185,15 +185,17 @@ func start_prompt(info Info) {
                 if num >= int64(len(curr_sub_dirs)) {
                     fmt.Printf("!!! Invalid Number.\n")
                 } else {
-                    fmt.Printf("%#v\n========\n", curr)
                     curr = curr_sub_dirs[num]
                     curr_sub_dirs = show_current_info(curr)
-                    fmt.Printf("%#v\n", *curr.parent)
+                    // WHY DO I NEED TO DO THIS?!?!?!?!?!?!?!?!?!?!??!?
+                    // fixed by having the children be array of ptrs instead of structs
+                    // i still dont know wtf why
+                    // curr.parent = par
                 }
 
             } else if fds[0] == "b" || fds[0] == "back" {
                 if curr.parent != nil {
-                    curr = *curr.parent
+                    curr = curr.parent
                     curr_sub_dirs = show_current_info(curr)
                 } else {
                     fmt.Printf("Cannot go back any more.\n")
