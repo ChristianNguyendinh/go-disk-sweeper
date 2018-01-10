@@ -113,8 +113,15 @@ func scan_dir_contents(location string) ([]*Info, uint64) {
         }, 0
     }
 
+    if len(out) == 0 {
+        // return an empty slice if nothing in folder
+        return []*Info{}, 0
+    }
+
+    // split and ignore first info line
     spl := strings.Split(string(out), "\n")
     take := spl[1 : (len(spl) - 1)]
+
     var contents []*Info
 
     for _, line := range take {
