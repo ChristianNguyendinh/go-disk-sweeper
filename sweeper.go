@@ -203,12 +203,6 @@ func main() {
     h := flag.Bool("hidden", false, "scan for hidden files")
     flag.Parse()
 
-    if *h {
-        flags = "-la"
-    } else {
-        flags = "-l"
-    }
-
     // scans the directory the user is currently in
     // NOT the directory the executable is in!
     dir, err := os.Getwd()
@@ -216,20 +210,42 @@ func main() {
         log.Fatal(err)
     }
 
-    // pretty print list of size 1 consisting of returned Info struct
-    //pprint_children([]Info{scan_dir(dir)}, 0)
+    windows := true
 
-    info := scan_dir(dir)
-    report_errors(bad_dirs)
+    if windows {
+        if *h {
+            flags = "/a"
+        } else {
+            flags = ""
+        }
 
-    // pprint_children([]Info{info}, 0)
+        info := windows_scan_dir(dir)
+        report_errors(bad_dirs)
 
-    start_prompt(&info)
+        // pprint_children([]Info{info}, 0)
+
+        start_prompt(&info)
+
+    } else {
+        if *h {
+            flags = "-la"
+        } else {
+            flags = "-l"
+        }
+
+        // pretty print list of size 1 consisting of returned Info struct
+        //pprint_children([]Info{scan_dir(dir)}, 0)
+
+        info := scan_dir(dir)
+        report_errors(bad_dirs)
+
+        // pprint_children([]Info{info}, 0)
+
+        start_prompt(&info)
+    }
 
 
-    // going back twice doesnt work - show_current_info is fking us
-    // empty directory doesnt work
-    // support for windows
+    // support for windows - ignore owner and group for now
     // refactor - some stuff (var names) are bad
     // later - generate html?, concurrency?
 }
