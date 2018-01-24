@@ -4,6 +4,7 @@ import (
     "strings"
     "strconv"
     "log"
+    "os/exec"
 )
 
 func windows_format_name(location string, prev string) (name string) {
@@ -25,12 +26,12 @@ func windows_format_name(location string, prev string) (name string) {
 func windows_scan_dir_contents(location string) ([]*Info, uint64) {
     var total_size uint64 = 0
 
-    /*
     // command to get rid of any alias to ensure format
-    cmd := exec.Command(dir, flags, location)
+    cmd := exec.Command("cmd", "/c", "dir", location)
     out, err := cmd.Output()
     // gracefully continue - return errored info struct list
     if err != nil {
+        log.Println(err)
         bad_dirs = append(bad_dirs, location)
 
         return []*Info{
@@ -46,24 +47,27 @@ func windows_scan_dir_contents(location string) ([]*Info, uint64) {
         }, 0
     }
 
-    */
 
-    out := []byte(` Volume in drive C has no label.
- Volume Serial Number is F4AC-9851
+//     out := []byte(` Volume in drive C has no label.
+//  Volume Serial Number is F4AC-9851
 
- Directory of C:\
+//  Directory of C:\
 
-09/02/2015  12:41 PM    <DIR>          $SysReset
-05/30/2016  06:22 PM                93 HaxLogs.txt
-05/07/2016  02:58 AM    <DIR>          PerfLogs
-05/22/2016  07:55 PM    <DIR>          Program Files
-05/31/2016  11:30 AM    <DIR>          Program Files (x86)
-07/30/2015  04:32 PM    <DIR>          Temp
-05/22/2016  07:55 PM    <DIR>          Users
-05/22/2016  08:00 PM    <DIR>          Windows
-05/22/2016  09:50 PM    <DIR>          Windows.old
-               1 File(s)             93 bytes
-               8 Dir(s)  18,370,433,024 bytes free`)
+// 09/02/2015  12:41 PM    <DIR>          $SysReset
+// 05/30/2016  06:22 PM                93 HaxLogs.txt
+// 05/07/2016  02:58 AM    <DIR>          PerfLogs
+// 05/22/2016  07:55 PM    <DIR>          Program Files
+// 05/31/2016  11:30 AM    <DIR>          Program Files (x86)
+// 07/30/2015  04:32 PM    <DIR>          Temp
+// 05/22/2016  07:55 PM    <DIR>          Users
+// 05/22/2016  08:00 PM    <DIR>          Windows
+// 05/22/2016  09:50 PM    <DIR>          Windows.old
+//                1 File(s)             93 bytes
+//                8 Dir(s)  18,370,433,024 bytes free`)
+
+    log.Printf(string(out))
+
+
     if len(out) == 0 {
         // return an empty slice if nothing in folder
         return []*Info{}, 0
@@ -71,7 +75,7 @@ func windows_scan_dir_contents(location string) ([]*Info, uint64) {
 
     // split and ignore first five and last two info lines the two newlines at the end
     spl := strings.Split(string(out), "\n")
-    take := spl[5 : (len(spl) - 4)]
+    take := spl[5 : (len(spl) - 3)]
 
     var contents []*Info
 
@@ -83,19 +87,21 @@ func windows_scan_dir_contents(location string) ([]*Info, uint64) {
 
         log.Printf("%#v", name)
 
-
         directory := (fields[3] == "<DIR>")
 
         var size uint64
         var err error
         var children []*Info
 
-        if name == "." || name == ".." {
+        // windows adds carriage return at end of name
+        if name == ".\r" || name == "..\r" {
             continue
         } else if directory {
-            children, size = []*Info{}, 69 // windows_scan_dir_contents(location + "\\" + name)
+            children, size = windows_scan_dir_contents(location + "\\" + name)
         } else {
-            size, err = strconv.ParseUint(fields[3], 10, 64)
+            // remove commas from number string
+            fstr := strings.Replace(fields[3], ",", "", -1)
+            size, err = strconv.ParseUint(fstr, 10, 64)
             if err != nil {
                 log.Fatal(err)
             }
@@ -106,8 +112,8 @@ func windows_scan_dir_contents(location string) ([]*Info, uint64) {
 
         info := Info{   
             directory : directory,
-            owner     : "sad",
-            group     : "boiz",
+            owner     : "???",
+            group     : "???",
             size      : size,
             name      : name,
             children  : children,
