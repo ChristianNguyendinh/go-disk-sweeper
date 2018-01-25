@@ -1,3 +1,4 @@
+// Functions for displaying the prompt for showing and traversing gathered info
 package main
 
 import (

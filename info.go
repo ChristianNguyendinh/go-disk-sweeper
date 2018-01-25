@@ -1,3 +1,7 @@
+// Holds declarations for the info struct which holds
+// information about a directory.
+// Also declares types for arrays of pointers to Info
+// structs for different types of sorting.
 package main
 
 // Struct holding file/directory info

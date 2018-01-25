@@ -1,3 +1,4 @@
+// Linux/MacOS functions for scanning a directory and extracting its information
 package main
 
 import (

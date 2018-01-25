@@ -1,3 +1,5 @@
+// Main function kicks off scanning for info, and the CLI prompt afterwards.
+// Includes some leftover debugging pretty print functions
 package main
 
 import (
