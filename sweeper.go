@@ -8,11 +8,6 @@ import (
     "flag"
 )
 
-// env GOOS=darwin GOARCH=amd64 go build -o dist/sweeper-darwin-amd64  sweeper.go
-// env GOOS=linux GOARCH=386 go build -o dist/sweeper-linux-386  sweeper.go
-// env GOOS=linux GOARCH=amd64 go build -o dist/sweeper-linux-amd64  sweeper.go
-// env GOOS=windows GOARCH=amd64 go build -o dist/sweeper-windows-amd64  sweeper.go
-
 // Holds directories that produce an error when accessing
 var bad_dirs []string
 
