@@ -12,15 +12,15 @@ After running executable. Type 'help' for list of commands.
 
 ## Example
 <b>Windows:</b>
-> dist/sweeper-windows-amd64.exe
+> dist/sweeper-windows-amd64.exe  
 
 <b>Linux</b>
-> chmod +x dist/sweeper-linux-amd64
-> ./dist/sweeper-linux-amd64
+> chmod +x dist/sweeper-linux-amd64  
+> ./dist/sweeper-linux-amd64  
 
 <b>MacOS</b>
-> chmod +x dist/sweeper-darwin-amd64
-> ./dist/sweeper-darwin-amd64
+> chmod +x dist/sweeper-darwin-amd64  
+> ./dist/sweeper-darwin-amd64  
 
 Output:
 > \______________________________________________________  
@@ -71,4 +71,5 @@ Output:
 ## TODO:
 - slow
 - pagination
+- add some tests
 
